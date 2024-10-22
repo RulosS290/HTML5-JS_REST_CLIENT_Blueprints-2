@@ -76,6 +76,27 @@ const BlueprintList = () => {
         setUpdatedPoints([...updatedPoints, newPoint]);
     };
 
+    // Función para guardar el blueprint actualizado en el servidor
+    const handleSaveBlueprint = () => {
+        if (selectedBlueprint) {
+            const blueprintToSave = {
+                name: selectedBlueprint.name,
+                points: updatedPoints // Enviar los puntos actualizados
+            };
+
+            // Realizar la solicitud PUT para actualizar el blueprint
+            axios.put(`http://localhost:8080/blueprints/${author}/${selectedBlueprint.name}`, blueprintToSave)
+                .then(response => {
+                    alert('Blueprint saved successfully!');
+                })
+                .catch(error => {
+                    console.error("There was an error saving the blueprint!", error);
+                    alert('Failed to save blueprint.');
+                });
+        }
+        getBlueprints();
+    };
+
     return (
         <div className="container">
             <h1>Blueprints</h1>
@@ -121,7 +142,7 @@ const BlueprintList = () => {
                         height="500" 
                         onClick={handleCanvasClick} // Asignar el manejador de clics
                     ></canvas>
-                    <button class="botonSaven">Save Blueprint</button>
+                    <button className="botonSaven" onClick={handleSaveBlueprint}>Save Blueprint</button> {/* Llamar a la función de guardar */}
                 </div>
             )}
         </div>
@@ -129,5 +150,3 @@ const BlueprintList = () => {
 };
 
 export default BlueprintList;
-
-
