@@ -6,7 +6,8 @@ const BlueprintList = () => {
     const [author, setAuthor] = useState('');
     const [blueprints, setBlueprints] = useState([]);
     const [totalPoints, setTotalPoints] = useState(0);
-    const [selectedBlueprint, setSelectedBlueprint] = useState(null); // Nuevo estado para el blueprint seleccionado
+    const [selectedBlueprint, setSelectedBlueprint] = useState(null);
+    const [updatedPoints, setUpdatedPoints] = useState([]); // Estado para los puntos actualizados
 
     const getBlueprints = () => {
         axios.get(`http://localhost:8080/blueprints/${author}`)
@@ -29,10 +30,11 @@ const BlueprintList = () => {
 
     // Función para manejar la selección de un blueprint
     const openBlueprint = (blueprint) => {
-        setSelectedBlueprint(blueprint); // Asigna el blueprint seleccionado
+        setSelectedBlueprint(blueprint);
+        setUpdatedPoints(blueprint.pointsArray); // Inicializar los puntos con los existentes
     };
 
-    // Usar un efecto para dibujar el blueprint cada vez que cambie el seleccionado
+    // Usar un efecto para dibujar el blueprint cada vez que cambien los puntos
     useEffect(() => {
         const drawBlueprint = () => {
             if (selectedBlueprint) {
@@ -40,26 +42,12 @@ const BlueprintList = () => {
                 const ctx = canvas.getContext('2d');
                 ctx.clearRect(0, 0, canvas.width, canvas.height); // Limpiar el canvas
 
-                // Dibujar cada segmento basado en los puntos del blueprint
+                // Dibujar cada segmento basado en los puntos actualizados del blueprint
                 ctx.beginPath();
-                const points = selectedBlueprint.pointsArray;
-                if(window.PointerEvent) {
-                    canvas.addEventListener("pointerdown", function(event){
-                      alert('pointerdown at '+event.pageX+','+event.pageY);  
-                      
-                    });
-                  }
-                  else {
-                    canvas.addEventListener("mousedown", function(event){
-                                alert('mousedown at '+event.clientX+','+event.clientY);  
-            
-                      }
-                    );
-                };
-                if (points.length > 0) {
-                    ctx.moveTo(points[0].x, points[0].y); // Moverse al primer punto
+                if (updatedPoints.length > 0) {
+                    ctx.moveTo(updatedPoints[0].x, updatedPoints[0].y); // Moverse al primer punto
 
-                    points.forEach(point => {
+                    updatedPoints.forEach(point => {
                         ctx.lineTo(point.x, point.y); // Dibujar línea hacia el siguiente punto
                     });
 
@@ -69,8 +57,24 @@ const BlueprintList = () => {
             }
         };
 
-        drawBlueprint(); // Llamar a la función cuando cambie el blueprint seleccionado
-    }, [selectedBlueprint]); // El efecto se ejecuta cuando 'selectedBlueprint' cambie
+        drawBlueprint(); // Llamar a la función cuando cambien los puntos actualizados
+    }, [updatedPoints, selectedBlueprint]); // Se ejecuta cuando 'updatedPoints' o 'selectedBlueprint' cambian
+
+    // Función para agregar un nuevo punto al hacer clic en el canvas
+    const handleCanvasClick = (event) => {
+        const canvas = document.getElementById('blueprintCanvas');
+        const rect = canvas.getBoundingClientRect(); // Obtener la posición del canvas en la pantalla
+
+        // Calcular las coordenadas del clic dentro del canvas
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        // Crear un nuevo punto con las coordenadas calculadas
+        const newPoint = { x, y };
+
+        // Actualizar los puntos del blueprint seleccionado
+        setUpdatedPoints([...updatedPoints, newPoint]);
+    };
 
     return (
         <div className="container">
@@ -89,7 +93,7 @@ const BlueprintList = () => {
                     <tr>
                         <th>Blueprint name</th>
                         <th>Number of points</th>
-                        <th>Open</th> {/* Nueva columna */}
+                        <th>Open</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -98,7 +102,7 @@ const BlueprintList = () => {
                             <td>{bp.name}</td>
                             <td>{bp.points}</td>
                             <td>
-                                <button onClick={() => openBlueprint(bp)}>Open</button> {/* Botón para abrir el blueprint */}
+                                <button onClick={() => openBlueprint(bp)}>Open</button>
                             </td>
                         </tr>
                     ))}
@@ -111,14 +115,19 @@ const BlueprintList = () => {
             {selectedBlueprint && (
                 <div>
                     <h3>Current blueprint: {selectedBlueprint.name}</h3>
-                    <canvas id="blueprintCanvas" width="500" height="500"></canvas> {/* Canvas para el dibujo */}
+                    <canvas 
+                        id="blueprintCanvas" 
+                        width="500" 
+                        height="500" 
+                        onClick={handleCanvasClick} // Asignar el manejador de clics
+                    ></canvas>
                     <button class="botonSaven">Save Blueprint</button>
                 </div>
             )}
-            
         </div>
     );
 };
 
 export default BlueprintList;
+
 
