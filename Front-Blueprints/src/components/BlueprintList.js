@@ -65,23 +65,29 @@ const BlueprintList = () => {
     };
 
     const handleSaveBlueprint = () => {
-        if (selectedBlueprint) {
-            const blueprintToSave = {
-                name: selectedBlueprint.name,
-                points: updatedPoints
-            };
-
-            axios.put(`http://localhost:8080/blueprints/${author}/${selectedBlueprint.name}`, blueprintToSave)
-                .then(response => {
-                    alert('Blueprint saved successfully!');
-                })
-                .catch(error => {
-                    console.error("There was an error saving the blueprint!", error);
-                    alert('Failed to save blueprint.');
-                });
+        const blueprintToSave = {
+            name: selectedBlueprint.name,
+            points: updatedPoints
+        };
+    
+        // Verifica si es un nuevo blueprint (sin puntos)
+        if (updatedPoints.length === 0) {
+            alert('No points to save for this blueprint.');
+            return;
         }
-        getBlueprints();
+    
+        // Hacer PUT si ya existe
+        axios.put(`http://localhost:8080/blueprints/${author}/${selectedBlueprint.name}`, blueprintToSave)
+            .then(response => {
+                alert('Blueprint saved successfully!');
+                getBlueprints(); // Actualiza la lista de blueprints
+            })
+            .catch(error => {
+                console.error("There was an error saving the blueprint!", error);
+                alert('Failed to save blueprint.');
+            });
     };
+    
 
     const handleCreateNewBlueprint = () => {
         const canvas = canvasRef.current;
@@ -89,17 +95,25 @@ const BlueprintList = () => {
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height); // Limpiar el canvas
         }
-
+    
         const blueprintName = prompt('Enter the name of the new blueprint:');
         if (blueprintName) {
             const newBlueprint = {
+                author: author, // Asegúrate de incluir el autor
                 name: blueprintName,
-                pointsArray: [],
-                points: 0
+                points: [] // Inicialmente, no hay puntos
             };
-            setSelectedBlueprint(newBlueprint); // Establecer el nuevo blueprint
-            setUpdatedPoints([]); // Resetear los puntos
-            setBlueprints([...blueprints, newBlueprint]); // Agregar el nuevo blueprint a la lista
+    
+            // Hacer POST para crear el nuevo blueprint
+            axios.post('http://localhost:8080/blueprints', newBlueprint)
+                .then(response => {
+                    alert('Blueprint created successfully!');
+                    getBlueprints(); // Hacer GET para actualizar la lista
+                })
+                .catch(error => {
+                    console.error("There was an error creating the blueprint!", error);
+                    alert('Failed to create blueprint.');
+                });
         }
     };
 
