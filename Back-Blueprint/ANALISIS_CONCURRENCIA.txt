@@ -1,0 +1,15 @@
+1. ¿Qué condiciones de carrera se podrían presentar?
+
+Las condiciones de carrera que se podrían presentar son:
+
+Modificación Concurrente: Si varios usuarios intentan agregar o actualizar el mismo plano al mismo tiempo, podría ocurrir una condición de carrera. Logrando inconsistencias en los datos o la pérdida de cambios realizados por un usuario.
+
+Consulta Concurrente: Si alguien está consultando los planos existentes mientras ocurren actualizaciones en segundo plano, es posible que vea datos desactualizados debido a la falta de sincronización.
+
+2. ¿Cuales son las respectivas regiones críticas?
+
+La región crítica identificada es la agregación o actualización de los planos, ya que se puede presentar una condición de carrera si varios usuarios intentan agregar o actualizar el mismo plano al mismo tiempo.
+
+3. Solución 
+
+Para solucionar el problema de la condición de carrera, se cambia la colección a thread-safe por ConcurrentHashmap, y con el uso del método putIfAbsent, se puede agregar un plano si no existe uno con el mismo nombre, de lo contrario, se actualiza el plano existente.
