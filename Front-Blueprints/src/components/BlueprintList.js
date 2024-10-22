@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import './BlueprintList.css';
 
@@ -7,7 +7,8 @@ const BlueprintList = () => {
     const [blueprints, setBlueprints] = useState([]);
     const [totalPoints, setTotalPoints] = useState(0);
     const [selectedBlueprint, setSelectedBlueprint] = useState(null);
-    const [updatedPoints, setUpdatedPoints] = useState([]); // Estado para los puntos actualizados
+    const [updatedPoints, setUpdatedPoints] = useState([]);
+    const canvasRef = useRef(null); // Referencia para el canvas
 
     const getBlueprints = () => {
         axios.get(`http://localhost:8080/blueprints/${author}`)
@@ -15,11 +16,9 @@ const BlueprintList = () => {
                 const blueprintData = response.data.map(bp => ({
                     name: bp.name,
                     points: bp.points.length,
-                    pointsArray: bp.points // Asegúrate de tener el array de puntos para graficar
+                    pointsArray: bp.points
                 }));
                 setBlueprints(blueprintData);
-
-                // Calcular el total de puntos
                 const total = blueprintData.reduce((sum, bp) => sum + bp.points, 0);
                 setTotalPoints(total);
             })
@@ -28,63 +27,50 @@ const BlueprintList = () => {
             });
     };
 
-    // Función para manejar la selección de un blueprint
     const openBlueprint = (blueprint) => {
         setSelectedBlueprint(blueprint);
-        setUpdatedPoints(blueprint.pointsArray); // Inicializar los puntos con los existentes
+        setUpdatedPoints(blueprint.pointsArray);
     };
 
-    // Usar un efecto para dibujar el blueprint cada vez que cambien los puntos
     useEffect(() => {
         const drawBlueprint = () => {
-            if (selectedBlueprint) {
-                const canvas = document.getElementById('blueprintCanvas');
+            const canvas = canvasRef.current;
+            if (selectedBlueprint && canvas) {
                 const ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, canvas.width, canvas.height); // Limpiar el canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                // Dibujar cada segmento basado en los puntos actualizados del blueprint
                 ctx.beginPath();
                 if (updatedPoints.length > 0) {
-                    ctx.moveTo(updatedPoints[0].x, updatedPoints[0].y); // Moverse al primer punto
+                    ctx.moveTo(updatedPoints[0].x, updatedPoints[0].y);
 
                     updatedPoints.forEach(point => {
-                        ctx.lineTo(point.x, point.y); // Dibujar línea hacia el siguiente punto
+                        ctx.lineTo(point.x, point.y);
                     });
 
                     ctx.closePath();
-                    ctx.stroke(); // Realizar el dibujo
+                    ctx.stroke();
                 }
             }
         };
+        drawBlueprint();
+    }, [updatedPoints, selectedBlueprint]);
 
-        drawBlueprint(); // Llamar a la función cuando cambien los puntos actualizados
-    }, [updatedPoints, selectedBlueprint]); // Se ejecuta cuando 'updatedPoints' o 'selectedBlueprint' cambian
-
-    // Función para agregar un nuevo punto al hacer clic en el canvas
     const handleCanvasClick = (event) => {
-        const canvas = document.getElementById('blueprintCanvas');
-        const rect = canvas.getBoundingClientRect(); // Obtener la posición del canvas en la pantalla
-
-        // Calcular las coordenadas del clic dentro del canvas
+        const canvas = canvasRef.current;
+        const rect = canvas.getBoundingClientRect();
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
-
-        // Crear un nuevo punto con las coordenadas calculadas
         const newPoint = { x, y };
-
-        // Actualizar los puntos del blueprint seleccionado
         setUpdatedPoints([...updatedPoints, newPoint]);
     };
 
-    // Función para guardar el blueprint actualizado en el servidor
     const handleSaveBlueprint = () => {
         if (selectedBlueprint) {
             const blueprintToSave = {
                 name: selectedBlueprint.name,
-                points: updatedPoints // Enviar los puntos actualizados
+                points: updatedPoints
             };
 
-            // Realizar la solicitud PUT para actualizar el blueprint
             axios.put(`http://localhost:8080/blueprints/${author}/${selectedBlueprint.name}`, blueprintToSave)
                 .then(response => {
                     alert('Blueprint saved successfully!');
@@ -95,6 +81,26 @@ const BlueprintList = () => {
                 });
         }
         getBlueprints();
+    };
+
+    const handleCreateNewBlueprint = () => {
+        const canvas = canvasRef.current;
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Limpiar el canvas
+        }
+
+        const blueprintName = prompt('Enter the name of the new blueprint:');
+        if (blueprintName) {
+            const newBlueprint = {
+                name: blueprintName,
+                pointsArray: [],
+                points: 0
+            };
+            setSelectedBlueprint(newBlueprint); // Establecer el nuevo blueprint
+            setUpdatedPoints([]); // Resetear los puntos
+            setBlueprints([...blueprints, newBlueprint]); // Agregar el nuevo blueprint a la lista
+        }
     };
 
     return (
@@ -132,17 +138,23 @@ const BlueprintList = () => {
 
             <h4>Total user points: {totalPoints}</h4>
 
-            {/* Canvas para dibujar el blueprint */}
+            {author && (
+                <div>
+                    <button onClick={handleCreateNewBlueprint}>Create New Blueprint</button>
+                </div>
+            )}
+
             {selectedBlueprint && (
                 <div>
                     <h3>Current blueprint: {selectedBlueprint.name}</h3>
-                    <canvas 
-                        id="blueprintCanvas" 
-                        width="500" 
-                        height="500" 
-                        onClick={handleCanvasClick} // Asignar el manejador de clics
+                    <canvas
+                        ref={canvasRef} // Referencia del canvas
+                        id="blueprintCanvas"
+                        width="500"
+                        height="500"
+                        onClick={handleCanvasClick}
                     ></canvas>
-                    <button className="botonSaven" onClick={handleSaveBlueprint}>Save Blueprint</button> {/* Llamar a la función de guardar */}
+                    <button className="botonSaven" onClick={handleSaveBlueprint}>Save Blueprint</button>
                 </div>
             )}
         </div>
@@ -150,3 +162,8 @@ const BlueprintList = () => {
 };
 
 export default BlueprintList;
+
+
+
+
+
