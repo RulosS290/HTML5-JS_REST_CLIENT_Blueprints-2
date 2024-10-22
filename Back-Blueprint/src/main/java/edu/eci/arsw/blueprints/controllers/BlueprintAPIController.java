@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -90,6 +91,15 @@ public class BlueprintAPIController {
         }
     } 
 
-    
+    @DeleteMapping(path="/{author}/{bpname}")
+    public ResponseEntity<?> manejadorDeleteRecursoBlueprints(@PathVariable("author") String author, @PathVariable("bpname") String bpname) {
+        try {
+            bps.deleteBlueprint(author, bpname);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT); // 204 No Content
+        } catch (BlueprintNotFoundException e) {
+            Logger.getLogger(BlueprintAPIController.class.getName()).log(Level.SEVERE, null, e);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND); // 404 Not Found
+        }
+    }
 }
 

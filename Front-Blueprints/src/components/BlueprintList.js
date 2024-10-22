@@ -87,7 +87,6 @@ const BlueprintList = () => {
                 alert('Failed to save blueprint.');
             });
     };
-    
 
     const handleCreateNewBlueprint = () => {
         const canvas = canvasRef.current;
@@ -115,6 +114,29 @@ const BlueprintList = () => {
                     alert('Failed to create blueprint.');
                 });
         }
+    };
+
+    // Nueva función para manejar la eliminación de blueprints
+    const handleDeleteBlueprint = () => {
+        if (!selectedBlueprint) {
+            alert('No blueprint selected to delete.');
+            return;
+        }
+
+        const blueprintName = selectedBlueprint.name;
+
+        // Hacer DELETE para eliminar el blueprint
+        axios.delete(`http://localhost:8080/blueprints/${author}/${blueprintName}`)
+            .then(response => {
+                alert('Blueprint deleted successfully!');
+                setSelectedBlueprint(null); // Limpiar el blueprint seleccionado
+                setUpdatedPoints([]); // Limpiar los puntos en el canvas
+                getBlueprints(); // Actualizar la lista de blueprints
+            })
+            .catch(error => {
+                console.error("There was an error deleting the blueprint!", error);
+                alert('Failed to delete blueprint.');
+            });
     };
 
     return (
@@ -169,6 +191,7 @@ const BlueprintList = () => {
                         onClick={handleCanvasClick}
                     ></canvas>
                     <button className="botonSaven" onClick={handleSaveBlueprint}>Save Blueprint</button>
+                    <button className="botonDelete" onClick={handleDeleteBlueprint}>Delete Blueprint</button> {/* Botón de DELETE */}
                 </div>
             )}
         </div>
@@ -176,6 +199,8 @@ const BlueprintList = () => {
 };
 
 export default BlueprintList;
+
+
 
 
 

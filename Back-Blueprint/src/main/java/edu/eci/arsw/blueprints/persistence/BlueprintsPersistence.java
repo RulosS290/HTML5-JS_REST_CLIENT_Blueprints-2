@@ -58,5 +58,14 @@ public interface BlueprintsPersistence {
      * @throws BlueprintNotFoundException if the given author doesn't exist
      */
     public Set<Blueprint> getBlueprintsByAuthor(String author) throws BlueprintNotFoundException;
+
+    /**
+     * Eliminar el blueprint dado.
+     *
+     * @param author el autor del blueprint
+     * @param bprintname el nombre del blueprint
+     * @throws BlueprintNotFoundException si no existe tal blueprint
+     */
+    public void deleteBlueprint(String author, String bprintname) throws BlueprintNotFoundException;
     
 }
