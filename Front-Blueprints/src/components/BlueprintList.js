@@ -43,6 +43,19 @@ const BlueprintList = () => {
                 // Dibujar cada segmento basado en los puntos del blueprint
                 ctx.beginPath();
                 const points = selectedBlueprint.pointsArray;
+                if(window.PointerEvent) {
+                    canvas.addEventListener("pointerdown", function(event){
+                      alert('pointerdown at '+event.pageX+','+event.pageY);  
+                      
+                    });
+                  }
+                  else {
+                    canvas.addEventListener("mousedown", function(event){
+                                alert('mousedown at '+event.clientX+','+event.clientY);  
+            
+                      }
+                    );
+                };
                 if (points.length > 0) {
                     ctx.moveTo(points[0].x, points[0].y); // Moverse al primer punto
 
@@ -99,8 +112,10 @@ const BlueprintList = () => {
                 <div>
                     <h3>Current blueprint: {selectedBlueprint.name}</h3>
                     <canvas id="blueprintCanvas" width="500" height="500"></canvas> {/* Canvas para el dibujo */}
+                    <button class="botonSaven">Save Blueprint</button>
                 </div>
             )}
+            
         </div>
     );
 };
